@@ -24,7 +24,7 @@ class PostgresSettings(BaseModel):
 
 
 class Settings(BaseSettings):
-    postgres: PostgresSettings = PostgresSettings()
+    postgresql: PostgresSettings = PostgresSettings()
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
