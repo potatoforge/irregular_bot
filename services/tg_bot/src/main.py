@@ -114,5 +114,11 @@ async def main() -> None:
         await bot.session.close()
 
 
+logger.info(
+    "Started with settings: %s",
+    settings.model_dump_json(indent=4, exclude={"postgresql": {"password"}}),
+)
+
+
 if __name__ == "__main__":
     asyncio.run(main())

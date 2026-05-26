@@ -4,6 +4,8 @@ on:
     push:
         branches:
             - main
+env:
+    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
     deploy:
@@ -23,3 +25,5 @@ jobs:
                   script: |
                       cd /root/dev/irregular_bot
                       git pull origin main
+                      docker-compose down
+                      docker-compose up -d --build

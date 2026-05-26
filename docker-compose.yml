@@ -16,5 +16,25 @@ services:
             retries: 5
         restart: always
 
+    tg_bot:
+        container_name: tg_bot
+        build:
+            context: ./
+            dockerfile: services/tg_bot/Dockerfile
+            args:
+                NEXUS_PYPI_INDEX_URL: ${NEXUS_PYPI_INDEX_URL}
+        environment:
+            - Postgresql__host=${Postgresql__host}
+            - Postgresql__port=${Postgresql__port}
+            - Postgresql__user=${Postgresql__user}
+            - Postgresql__password=${Postgresql__password}
+            - Postgresql__db=${Postgresql__db}
+            - ADMIN_ID=${ADMIN_ID}
+            - TG_BOT_KEY=${TG_BOT_KEY}
+        depends_on:
+            postgres:
+                condition: service_healthy
+        restart: always
+
 volumes:
     postgres_data:
