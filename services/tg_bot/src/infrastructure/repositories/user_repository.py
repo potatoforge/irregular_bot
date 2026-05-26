@@ -31,7 +31,7 @@ class UserRepository(BaseRepository):
                 last_name=user_db.last_name,
             )
 
-    async def create_user(self, user: User) -> None:
+    async def create_user(self, user: User) -> User:
         async with self._session() as session:
             user_db = UserDB(
                 id=user.id,
@@ -41,4 +41,12 @@ class UserRepository(BaseRepository):
                 last_name=user.last_name,
             )
             session.add(user_db)
+            await session.flush()
             logging.info(f"User with tg_id={user.tg_id} created")
+            return User(
+                id=user_db.id,
+                tg_id=user_db.tg_id,
+                username=user_db.username,
+                first_name=user_db.first_name,
+                last_name=user_db.last_name,
+            )

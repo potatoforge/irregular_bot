@@ -9,6 +9,9 @@ from services.tg_bot.src.infrastructure.repositories.user_repository import (
 from services.tg_bot.src.infrastructure.repositories.verb_repository import (
     VerbRepository,
 )
+from services.tg_bot.src.infrastructure.repositories.game_repository import (
+    IrregularGameRepository,
+)
 
 
 @dataclass
@@ -22,6 +25,7 @@ class Container:
         _ = container.pg_connector
         _ = container.user_repository
         _ = container.verb_repository
+        _ = container.irregular_game_repository
         return container
 
     @cached_property
@@ -35,3 +39,7 @@ class Container:
     @cached_property
     def verb_repository(self) -> VerbRepository:
         return VerbRepository(connector=self.pg_connector)
+
+    @cached_property
+    def irregular_game_repository(self) -> IrregularGameRepository:
+        return IrregularGameRepository(connector=self.pg_connector)

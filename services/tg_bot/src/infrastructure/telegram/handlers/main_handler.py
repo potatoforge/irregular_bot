@@ -1,15 +1,20 @@
 import logging
+from uuid import UUID
 from asyncio import sleep
 from aiogram import Router, F, html
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from services.tg_bot.src.infrastructure.telegram.keyboards.main_keyboard import main_kr
+from services.tg_bot.src.infrastructure.telegram.keyboards.main_keyboard import (
+    main_kr,
+    i_dont_know_kr,
+)
 from services.tg_bot.src.container import Container
 from services.tg_bot.src.config.settings import settings
 from services.tg_bot.src.domain.user import User
 from services.tg_bot.src.domain.verb import IrregularVerb
+from services.tg_bot.src.domain.irregular_game import IrregularVerbGameScore
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +23,7 @@ main_router = Router()
 container = Container.build(settings=settings)
 user_repository = container.user_repository
 verb_repository = container.verb_repository
+irregular_game_repository = container.irregular_game_repository
 
 
 class VerbStates(StatesGroup):
@@ -29,53 +35,81 @@ class VerbStates(StatesGroup):
 @main_router.message(CommandStart())
 async def cmd_start_handler(message: Message, state: FSMContext):
     await state.clear()
-    await set_user(
+    user = await set_user(
         tg_user_id=message.from_user.id,
         username=message.from_user.username,
         first_name=message.from_user.first_name,
         last_name=message.from_user.last_name,
     )
-    await message.answer("Hello!", reply_markup=main_kr())
+    score = await get_user_score(user.id)
+    await message.answer(
+        f"Hello, {user.first_name if user.first_name else user.username}!",
+        reply_markup=main_kr(),
+    )
+    await message.answer(f"Your current score: {html.bold(str(score.score))}")
 
 
 @main_router.message(F.text == "Get random verb")
 async def cmd_get_random_verb_handler(message: Message, state: FSMContext) -> None:
     await state.clear()
     random_verb = await get_random_verb()
+    user_id = (await get_user(tg_user_id=message.from_user.id)).id
     await message.reply(
         f"Random irregular verb:\n"
-        f"Base form: {html.bold(html.spoiler(random_verb.base_form))}\n"
-        f"Past simple: {html.bold(html.spoiler(random_verb.past_simple))}\n"
-        f"Past participle: {html.bold(html.spoiler(random_verb.past_participle))}\n"
-        f"Translation: {html.bold(random_verb.translation)}"
+        f"Translation: {html.bold(random_verb.translation)}\n"
+        f"Base form: {html.bold(html.spoiler(random_verb.base_form))}\n",
+        reply_markup=i_dont_know_kr(),
     )
+
+    logger.info(f"User with id={user_id} requested a random verb: {random_verb}")
     await state.set_state(VerbStates.waiting_for_verb)
-    await state.update_data(verb_id=random_verb.id)
+    await state.update_data(verb_id=random_verb.id, user_id=user_id)
 
 
 @main_router.message(VerbStates.waiting_for_verb)
 async def check_verb_handler(message: Message, state: FSMContext) -> None:
-    data = await state.get_data()
-    verb_id = data.get("verb_id")
+    user_state_data = await state.get_data()
+    verb_id = user_state_data.get("verb_id")
+    user_id = user_state_data.get("user_id")
     if verb_id is None:
         await message.reply("No verb to check. Please get a random verb first.")
         return
     user_input = message.text
+    if not user_input:
+        await message.reply("Please provide an answer.")
+        return
     is_correct = await check_verb(verb_id, user_input)
     if is_correct:
-        await message.reply("Correct! 🎉", reply_markup=main_kr())
+        user_score = await irregular_game_repository.increment_user_score(user_id)
+        await message.reply(
+            f"Correct! 🎉\n" f"Your current score: {html.bold(str(user_score.score))}",
+            reply_markup=main_kr(),
+        )
     else:
         verb = await get_verb_by_id(verb_id)
-        await message.reply("Incorrect. ❌", reply_markup=main_kr())
+        if not message.text.lower() == "i don't know":
+            await message.reply("Incorrect. ❌")
         await sleep(0.3)  # Add a small delay before showing the correct answer
         await message.reply(
             f"Random irregular verb:\n"
             f"Base form: {html.bold(verb.base_form)}\n"
             f"Past simple: {html.bold(verb.past_simple)}\n"
             f"Past participle: {html.bold(verb.past_participle)}\n"
-            f"Translation: {html.bold(verb.translation)}"
+            f"Translation: {html.bold(verb.translation)}",
+            reply_markup=main_kr(),
         )
     await state.clear()
+
+
+@main_router.message(F.text == "Show my score")
+async def show_score_handler(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    user = await get_user(tg_user_id=message.from_user.id)
+    user_score = await irregular_game_repository.get_user_score_by_id(user.id)
+    await message.answer(
+        f'Your score in "irregular verbs game": {html.bold((str(user_score.score)))}',
+        reply_markup=main_kr(),
+    )
 
 
 async def get_verb_by_id(verb_id: int) -> IrregularVerb:
@@ -88,7 +122,11 @@ async def check_verb(verb_id: int, user_input: str) -> bool:
     if verb is None:
         return False
     user_verbs = [v.strip().lower() for v in user_input.split(" ")]
-
+    if len(user_verbs) != 3:
+        logger.info(
+            f"User input does not contain exactly 3 verbs. Received: {user_input}"
+        )
+        return False
     logger.info(f"Checking verb with id={verb_id} against user input: {user_verbs}")
 
     if (
@@ -119,10 +157,10 @@ async def check_verb(verb_id: int, user_input: str) -> bool:
 
 async def set_user(
     tg_user_id: int, username: str | None, first_name: str | None, last_name: str | None
-) -> None:
-    user = await user_repository.get_user_by_tg_id(tg_user_id)
+) -> User:
+    user = await get_user(tg_user_id)
     if user is None:
-        await user_repository.create_user(
+        user = await user_repository.create_user(
             User(
                 tg_id=tg_user_id,
                 username=username,
@@ -130,6 +168,19 @@ async def set_user(
                 last_name=last_name,
             )
         )
+    return user
+
+
+async def get_user(tg_user_id: int) -> User | None:
+    user = await user_repository.get_user_by_tg_id(tg_user_id)
+    if not user:
+        return None
+    return user
+
+
+async def get_user_score(user_id: UUID) -> IrregularVerbGameScore:
+    score = await irregular_game_repository.get_user_score_by_id(user_id)
+    return score
 
 
 async def get_random_verb() -> IrregularVerb:

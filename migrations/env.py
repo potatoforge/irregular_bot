@@ -9,6 +9,7 @@ from migrations.settings import settings
 from services.shared.database.base_model import Base
 from services.tg_bot.src.infrastructure.db.sqlalchemy import user
 from services.tg_bot.src.infrastructure.db.sqlalchemy import verbs
+from services.tg_bot.src.infrastructure.db.sqlalchemy import game
 
 from alembic import context
 
@@ -35,7 +36,7 @@ target_metadata = Base.metadata
 
 def include_object(object, name, type_, reflected, compare_to) -> bool:
     if hasattr(object, "schema"):
-        if object.schema not in {"tg", "eng"}:
+        if object.schema not in {"tg", "eng", "game"}:
             return False
     return True
 
