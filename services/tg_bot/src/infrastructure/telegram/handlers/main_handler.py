@@ -28,7 +28,7 @@ irregular_game_repository = container.irregular_game_repository
 
 class VerbStates(StatesGroup):
     waiting_for_verb = State()
-    checking_verb = State()
+    work_on_mistakes = State()
 
 
 @main_router.message(F.text == "Hello")
@@ -54,7 +54,7 @@ async def cmd_get_random_verb_handler(message: Message, state: FSMContext) -> No
     await state.clear()
     random_verb = await get_random_verb()
     user_id = (await get_user(tg_user_id=message.from_user.id)).id
-    await message.reply(
+    await message.answer(
         f"Random irregular verb:\n"
         f"Translation: {html.bold(random_verb.translation)}\n"
         f"Base form: {html.bold(html.spoiler(random_verb.base_form))}\n",
@@ -81,24 +81,51 @@ async def check_verb_handler(message: Message, state: FSMContext) -> None:
     is_correct = await check_verb(verb_id, user_input)
     if is_correct:
         user_score = await irregular_game_repository.increment_user_score(user_id)
-        await message.reply(
+        await message.answer(
             f"Correct! 🎉\n" f"Your current score: {html.bold(str(user_score.score))}",
             reply_markup=main_kr(),
         )
+        await state.clear()
     else:
         verb = await get_verb_by_id(verb_id)
         if not message.text.lower() == "i don't know":
             await message.reply("Incorrect. ❌")
-        await sleep(0.3)  # Add a small delay before showing the correct answer
-        await message.reply(
+        await sleep(0.3)
+        await message.answer("Let's work on your mistakes! 💪\nWrite it correctly:")
+        await message.answer(
             f"Random irregular verb:\n"
+            f"Translation: {html.bold(verb.translation)}\n"
             f"Base form: {html.bold(verb.base_form)}\n"
             f"Past simple: {html.bold(verb.past_simple)}\n"
-            f"Past participle: {html.bold(verb.past_participle)}\n"
-            f"Translation: {html.bold(verb.translation)}",
+            f"Past participle: {html.bold(verb.past_participle)}",
+        )
+        await sleep(0.3)
+        await state.clear()
+        await state.set_state(VerbStates.work_on_mistakes)
+        await state.update_data(verb_id=verb_id, user_id=user_id)
+
+
+@main_router.message(VerbStates.work_on_mistakes)
+async def fix_mistakes_handler(message: Message, state: FSMContext):
+    user_state_data = await state.get_data()
+    verb_id = user_state_data.get("verb_id")
+    user_id = user_state_data.get("user_id")
+    user_input = message.text
+    if not user_input:
+        await message.reply("Please provide an answer.")
+        return
+    is_correct = await check_verb(verb_id, user_input)
+    if is_correct:
+        await message.reply(
+            f"Great! 🎉\nYou fixed your mistake!",
             reply_markup=main_kr(),
         )
-    await state.clear()
+        await state.clear()
+    else:
+        await message.reply(
+            "Still incorrect. ❌\nTry again or get a new verb.",
+            reply_markup=main_kr(),
+        )
 
 
 @main_router.message(F.text == "Show my score")
