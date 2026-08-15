@@ -1,5 +1,5 @@
 services:
-    postgres:
+    postgres_test:
         image: postgres:18.4-bookworm
         environment:
             POSTGRES_USER: ${POSTGRES_USER}
@@ -10,7 +10,7 @@ services:
         expose:
             - 5432
         volumes:
-            - postgres_data:/var/lib/postgresql
+            - postgres_test_data:/var/lib/postgresql
         healthcheck:
             test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
             interval: 10s
@@ -18,13 +18,13 @@ services:
             retries: 5
         restart: unless-stopped
 
-    tg_bot:
-        container_name: tg_bot
+    tg-bot-test:
         build:
             context: ./
-            dockerfile: services/tg_bot/src/Dockerfile
-            args:
-                NEXUS_PYPI_INDEX_URL: ${NEXUS_PYPI_INDEX_URL}
+            dockerfile: services/tg_bot/tests/Dockerfile
+        # command: >
+        #     sh -c "export PYTHONPATH=/app &&
+        #             pytest services/tg_bot/tests -q"
         environment:
             - Postgresql__host=${Postgresql__host}
             - Postgresql__port=${Postgresql__port}
@@ -34,9 +34,9 @@ services:
             - ADMIN_ID=${ADMIN_ID}
             - TG_BOT_KEY=${TG_BOT_KEY}
         depends_on:
-            postgres:
+            postgres_test:
                 condition: service_healthy
-        restart: unless-stopped
+        restart: no
 
 volumes:
-    postgres_data:
+    postgres_test_data:
