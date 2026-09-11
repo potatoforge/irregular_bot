@@ -66,7 +66,6 @@ class PostgresSettings(BaseModel):
 
 
 class Settings(BaseSettings):
-
     postgresql: PostgresSettings = PostgresSettings()
 
     model_config = SettingsConfigDict(

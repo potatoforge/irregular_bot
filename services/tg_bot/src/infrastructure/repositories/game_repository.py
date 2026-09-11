@@ -1,14 +1,12 @@
 import logging
 from uuid import UUID
 
-from sqlalchemy import select
-
 from services.shared.database.base_repository import BaseRepository
-from services.tg_bot.src.infrastructure.db.sqlalchemy.user import UserDB
+from services.tg_bot.src.domain.irregular_game import IrregularVerbGameScore
 from services.tg_bot.src.infrastructure.db.sqlalchemy.game import (
     IrregularVerbGameScoreDB,
 )
-from services.tg_bot.src.domain.irregular_game import IrregularVerbGameScore
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +20,7 @@ class IrregularGameRepository(BaseRepository):
             result = await session.execute(stmt)
             score_db = result.scalar_one_or_none()
 
-            logger.debug(
-                f"Queried game score for user_id={user_id}, found: {score_db is not None}"
-            )
+            logger.debug(f"Queried game score for user_id={user_id}, found: {score_db is not None}")
             logger.debug(f"Game score query result: {score_db}")
 
             if score_db is None:

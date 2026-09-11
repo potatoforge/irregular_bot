@@ -1,5 +1,7 @@
 import uuid
+
 import pytest
+
 from services.tg_bot.src.domain.user import User
 
 

@@ -1,6 +1,7 @@
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Protocol
+from typing import Protocol
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,

@@ -1,20 +1,15 @@
 import asyncio
 import logging
 import logging.config
-import sys
 from os import getenv
-from uuid import uuid4
 
-from aiogram import Bot, Dispatcher, html
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message, BotCommand, BotCommandScopeDefault
 from aiogram.fsm.storage.memory import MemoryStorage
-
-from services.tg_bot.src.config.settings import settings, LOGGING
+from aiogram.types import BotCommand, BotCommandScopeDefault
+from services.tg_bot.src.config.settings import LOGGING, settings
 from services.tg_bot.src.container import Container
-
 from services.tg_bot.src.infrastructure.telegram.handlers.main_handler import (
     main_router,
 )

@@ -1,9 +1,9 @@
 import logging
-from sqlalchemy import select
 
 from services.shared.database.base_repository import BaseRepository
-from services.tg_bot.src.infrastructure.db.sqlalchemy.user import UserDB
 from services.tg_bot.src.domain.user import User
+from services.tg_bot.src.infrastructure.db.sqlalchemy.user import UserDB
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +15,7 @@ class UserRepository(BaseRepository):
             result = await session.execute(stmt)
             user_db = result.scalar_one_or_none()
 
-            logger.debug(
-                f"Queried user with tg_id={tg_id}, found: {user_db is not None}"
-            )
+            logger.debug(f"Queried user with tg_id={tg_id}, found: {user_db is not None}")
             logger.debug(f"User query result: {user_db}")
 
             if user_db is None:
@@ -42,7 +40,7 @@ class UserRepository(BaseRepository):
             )
             session.add(user_db)
             await session.flush()
-            logging.info(f"User with tg_id={user.tg_id} created")
+            logger.info(f"User with tg_id={user.tg_id} created")
             return User(
                 id=user_db.id,
                 tg_id=user_db.tg_id,

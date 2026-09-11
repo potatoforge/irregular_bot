@@ -1,20 +1,21 @@
 import logging
-from uuid import UUID
 from asyncio import sleep
-from aiogram import Router, F, html
-from aiogram.types import Message, CallbackQuery
+from uuid import UUID
+
+from aiogram import F, Router, html
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from services.tg_bot.src.infrastructure.telegram.keyboards.main_keyboard import (
-    main_kr,
-    i_dont_know_kr,
-)
-from services.tg_bot.src.container import Container
+from aiogram.types import Message
 from services.tg_bot.src.config.settings import settings
+from services.tg_bot.src.container import Container
+from services.tg_bot.src.domain.irregular_game import IrregularVerbGameScore
 from services.tg_bot.src.domain.user import User
 from services.tg_bot.src.domain.verb import IrregularVerb
-from services.tg_bot.src.domain.irregular_game import IrregularVerbGameScore
+from services.tg_bot.src.infrastructure.telegram.keyboards.main_keyboard import (
+    i_dont_know_kr,
+    main_kr,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,13 +83,13 @@ async def check_verb_handler(message: Message, state: FSMContext) -> None:
     if is_correct:
         user_score = await irregular_game_repository.increment_user_score(user_id)
         await message.answer(
-            f"Correct! 🎉\n" f"Your current score: {html.bold(str(user_score.score))}",
+            f"Correct! 🎉\nYour current score: {html.bold(str(user_score.score))}",
             reply_markup=main_kr(),
         )
         await state.clear()
     else:
         verb = await get_verb_by_id(verb_id)
-        if not message.text.lower() == "i don't know":
+        if message.text.lower() != "i don't know":
             await message.reply("Incorrect. ❌")
         await sleep(0.3)
         await message.answer("Let's work on your mistakes! 💪\nWrite it correctly:")
@@ -109,7 +110,6 @@ async def check_verb_handler(message: Message, state: FSMContext) -> None:
 async def fix_mistakes_handler(message: Message, state: FSMContext):
     user_state_data = await state.get_data()
     verb_id = user_state_data.get("verb_id")
-    user_id = user_state_data.get("user_id")
     user_input = message.text
     if not user_input:
         await message.reply("Please provide an answer.")
@@ -117,7 +117,7 @@ async def fix_mistakes_handler(message: Message, state: FSMContext):
     is_correct = await check_verb(verb_id, user_input)
     if is_correct:
         await message.reply(
-            f"Great! 🎉\nYou fixed your mistake!",
+            "Great! 🎉\nYou fixed your mistake!",
             reply_markup=main_kr(),
         )
         await state.clear()
@@ -134,7 +134,7 @@ async def show_score_handler(message: Message, state: FSMContext) -> None:
     user = await get_user(tg_user_id=message.from_user.id)
     user_score = await irregular_game_repository.get_user_score_by_id(user.id)
     await message.answer(
-        f'Your score in "irregular verbs game": {html.bold((str(user_score.score)))}',
+        f'Your score in "irregular verbs game": {html.bold(str(user_score.score))}',
         reply_markup=main_kr(),
     )
 
@@ -150,9 +150,7 @@ async def check_verb(verb_id: int, user_input: str) -> bool:
         return False
     user_verbs = [v.strip().lower() for v in user_input.split(" ")]
     if len(user_verbs) != 3:
-        logger.info(
-            f"User input does not contain exactly 3 verbs. Received: {user_input}"
-        )
+        logger.info(f"User input does not contain exactly 3 verbs. Received: {user_input}")
         return False
     logger.info(f"Checking verb with id={verb_id} against user input: {user_verbs}")
 

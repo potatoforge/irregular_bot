@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 from functools import cached_property
 
-from services.tg_bot.src.config.settings import Settings
 from services.shared.database.pg_connector import PostgresqlConnector
+from services.tg_bot.src.config.settings import Settings
+from services.tg_bot.src.infrastructure.repositories.game_repository import (
+    IrregularGameRepository,
+)
 from services.tg_bot.src.infrastructure.repositories.user_repository import (
     UserRepository,
 )
 from services.tg_bot.src.infrastructure.repositories.verb_repository import (
     VerbRepository,
-)
-from services.tg_bot.src.infrastructure.repositories.game_repository import (
-    IrregularGameRepository,
 )
 
 
@@ -19,7 +19,7 @@ class Container:
     settings: Settings
 
     @classmethod
-    def build(cls, settings: Settings) -> "Container":
+    def build(cls, settings: Settings) -> Container:
         container = cls(settings=settings)
         # Force initialization of all cached properties
         _ = container.pg_connector

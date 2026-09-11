@@ -1,9 +1,9 @@
 import logging
-from sqlalchemy import func, select
 
 from services.shared.database.base_repository import BaseRepository
-from services.tg_bot.src.infrastructure.db.sqlalchemy.verbs import IrregularVerbDB
 from services.tg_bot.src.domain.verb import IrregularVerb
+from services.tg_bot.src.infrastructure.db.sqlalchemy.verbs import IrregularVerbDB
+from sqlalchemy import func, select
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +32,7 @@ class VerbRepository(BaseRepository):
             result = await session.execute(stmt)
             verb_db = result.scalar_one()
 
-            logger.debug(
-                f"Queried irregular verb by id={verb_id}, found: {verb_db is not None}"
-            )
+            logger.debug(f"Queried irregular verb by id={verb_id}, found: {verb_db is not None}")
             logger.debug(f"Irregular verb by id={verb_id} query result: {verb_db}")
 
             return IrregularVerb(

@@ -1,17 +1,13 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from migrations.settings import settings
 from services.shared.database.base_model import Base
-from services.tg_bot.src.infrastructure.db.sqlalchemy import user
-from services.tg_bot.src.infrastructure.db.sqlalchemy import verbs
-from services.tg_bot.src.infrastructure.db.sqlalchemy import game
-
-from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -35,10 +31,7 @@ target_metadata = Base.metadata
 
 
 def include_object(object, name, type_, reflected, compare_to) -> bool:
-    if hasattr(object, "schema"):
-        if object.schema not in {"tg", "eng", "game"}:
-            return False
-    return True
+    return hasattr(object, "schema") and object.schema in {"tg", "eng", "game"}
 
 
 def run_migrations_offline() -> None:
