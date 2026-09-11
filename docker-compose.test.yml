@@ -1,0 +1,33 @@
+services:
+    postgres_test:
+        image: postgres:18.4-bookworm
+        environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: pass
+            POSTGRES_DB: main
+        ports:
+            - "127.0.0.1:5434:5432"
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U user -d main" ]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+        restart: unless-stopped
+
+    tg_bot_test:
+        build:
+            context: ./
+            dockerfile: services/tg_bot/tests/Dockerfile
+        environment:
+            Postgresql__host: postgres_test
+            Postgresql__port: 5432
+            Postgresql__user: user
+            Postgresql__password: pass
+            Postgresql__db: main
+            ADMIN_ID: "123"
+            TG_BOT_KEY: "tg-key"
+        command: pytest services/tg_bot/tests -v
+        depends_on:
+            postgres_test:
+                condition: service_healthy
+        restart: "no"
