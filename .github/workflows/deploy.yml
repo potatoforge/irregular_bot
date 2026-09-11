@@ -1,14 +1,14 @@
 name: Deploy to Virtual Machine
 
 on:
-    push:
-        branches:
-            - main
-env:
-    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    workflow_run:
+        workflows: ["Tests"]
+        types: [completed]
+        branches: [main]
 
 jobs:
     deploy:
+        if: github.event.workflow_run.conclusion == 'success'
         runs-on: ubuntu-latest
 
         steps:

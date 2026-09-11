@@ -1,4 +1,4 @@
-FROM python:3.14.5-slim-bookworm
+FROM python:3.14.7-slim
 
 ARG NEXUS_PYPI_INDEX_URL
 
