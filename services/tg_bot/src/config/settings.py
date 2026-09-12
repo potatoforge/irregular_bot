@@ -1,4 +1,6 @@
 import os
+import logging
+import json
 
 import dotenv
 from pydantic import BaseModel
@@ -13,6 +15,9 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
+        "json": {
+            "()": "services.tg_bot.src.config.settings.JsonFormatter",
+        },
         "standard": {
             "format": "%(asctime)s %(levelname)s  %(name)s:  %(message)s",
         },
@@ -20,7 +25,7 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "standard",
+            "formatter": "json",
             "level": LOGGING_LEVEL,
             "stream": "ext://sys.stdout",
         },
@@ -38,6 +43,49 @@ LOGGING = {
         },
     },
 }
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        log_obj = {
+            "timestamp": self.formatTime(record),
+            "level": record.levelname,
+            "message": record.getMessage(),
+        }
+
+        for k, v in record.__dict__.items():
+            if k not in [
+                "name",
+                "msg",
+                "args",
+                "created",
+                "filename",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "levelname",
+                "getMessage",
+                "asctime",
+                "message",
+                "taskName",
+            ]:
+                try:
+                    json.dumps(v)
+                    log_obj[k] = v
+                except TypeError, ValueError:
+                    log_obj[k] = str(v)
+
+        return json.dumps(log_obj, indent=4)
 
 
 class PostgresSettings(BaseModel):

@@ -1,0 +1,203 @@
+exclude = [
+    # GRPC data
+    "**_pb2.pyi",
+
+    # git
+    ".git",
+
+    # build test
+    ".nox",
+    ".tox",
+
+    # test
+    ".pytest_cache",
+    ".coverage",
+    "coverage.xml",
+
+    # chache
+    ".mypy_cache",
+    ".ruff_cache",
+
+    # IDE
+    ".vscode",
+    ".idea",
+
+    # python additional
+    "__pypackages__",
+    ".pytype",
+    "*.pyc",
+    "*.pyo",
+
+    # virtual environment
+    ".pyenv",
+    ".direnv",
+    ".venv",
+    "venv",
+
+    # packages, builds
+    "site-packages",
+    "build",
+    "dist",
+
+    # alembic
+    "env.py",
+]
+
+target-version = "py314"
+
+line-length = 100
+indent-width = 4
+
+[lint]
+select = [
+    # https://docs.astral.sh/ruff/rules/
+
+    "FAST",  # fast-api
+    "A",     # flake8-builtins
+    "B",     # flake8-bugbear
+    "E",     # errors [pycodestyle]
+    "F",     # pyflakes
+    "G",     # logging-format
+    "W",     # warnings [pycodestyle]
+    "C901",  # McCabe complexity
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "ASYNC", # flake8-async
+    "BLE",   # flake8-blind-except
+
+
+    "COM",    # flake8-commas
+    "C4",     # flake8-comprehensions
+    "T10",    # flake8-debugger
+    "ISC",    # flake8-implicit-str-concat
+    "T20",    # flake8-print
+    "RSE",    # flake8-raise
+    "RET504", # unnecessary-assign [flake8-return]
+    "RET505", # superfluous-else-return [flake8-return]
+    "RET506", # superfluous-else-raise [flake8-return]
+    "RET507", # superfluous-else-continue [flake8-return]
+    "RET508", # superfluous-else-break [flake8-return]
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "ARG",    # flake8-unused-arguments
+    "PLC",    # Convention [pylint]
+    "PLE",    # Errors [pylint]
+    "PLR",    # Refactor [pylint]
+    "TRY",    # tryceratops
+    "INT",    # flake8-gettext
+    "RET",    # flake8-return
+    "S",      # flake8-bandit
+    "LOG",    # flake8-logging-format
+    "RUF",    # ruff specific rules
+    "DTZ",    # flake8-datetimez
+    "ANN",    # flake8-annotations
+    "PT",     # flake8-pytest-style
+    "FBT",    # flake8-boolean-trap
+    "ERA",    # eradicate
+    # "PGH",    # A collection of fast, cheap, regex based pre-commit hooks.
+]
+# https://docs.astral.sh/ruff/rules/
+# https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+ignore = [
+    "FAST002", # FastAPI dependency without `Annotated`
+    "RUF001",  # String contains ambiguous letter
+    "RUF002",  # Docstring contains ambiguous letter
+    "RUF003",  # Comment contains ambiguous letter
+    "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
+    "B028",    # no-explicit-stacklevel [flake8-bugbear]
+    "COM812",  # missing-trailing-comma [flake8-commas]
+    "TC002",   # typing-only-third-party-import [flake8-type-checking]
+    "PLR2004", # magic-value-comparison [Refactor [pylint]]
+    "TRY003",  # raise-vanilla-args [tryceratops]
+    "BLE001",  # do-no-catch-blind-exception
+    "ANN204",  # Missing return type annotation for special method
+    "S104",    # Possible binding to all interfaces
+    "S311",    # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "SIM110",  # Use `...` instead of `for` loop
+    "SIM108",  # Use ternary operator
+    "S101",    # Use of asserts
+    "A005",    # Module `...` shadows a Python standard-library module
+    "S105",    # S105 Possible hardcoded password assigned to: "..."
+    "TC003",   # typing-only-standard-library-import [flake8-type-checking]
+]
+
+
+[lint.flake8-bugbear]
+extend-immutable-calls = [
+    "Depends",
+    "fastapi.Depends",
+    "fastapi.Path",
+    "fastapi.Header",
+    "fastapi.Query",
+    "Header",
+    "fastapi.params.Depends",
+    "FastAPIGetIdToken.from_settings",
+    "service.presentation.http.auth.FastAPIGetIdToken",
+    "service.presentation.http.auth.FastAPIGetIdToken.from_settings",
+    "service.utils.validate_rest_token.FastAPIGetIdTokenValidation.from_token_validation_service",
+    "FastAPIGetIdTokenValidation.from_token_validation_service",
+]
+
+
+[lint.mccabe]
+max-complexity = 7
+
+[lint.per-file-ignores]
+"**.ipynb" = ["T201"]
+"services/telemetry/alembic/versions/*" = ["ANN201", "E402"]
+"__init__.py" = ["F401"]
+"**/test_*" = ["ARG001", "E501", "T201", "ARG005", "S", "PLR2004", "RUF006"]
+"*/tests/*" = [
+    "ARG001",
+    "E501",
+    "T201",
+    "ARG005",
+    "S",
+    "ANN",
+    "PLR2004",
+    "RUF006",
+]
+"**/*pb2_grpc.py" = [
+    "N802",
+    "ARG002",
+    "N803",
+    "PLR0913",
+    "E712",
+    "E501",
+    "ANN",
+    "ISC003",
+    "FBT",
+    "N815",
+    "E402",
+]
+"**/*pb2.py" = [
+    "N802",
+    "ARG002",
+    "N803",
+    "PLR0913",
+    "E712",
+    "E501",
+    "ANN",
+    "F401",
+    "N815",
+    "E402",
+]
+"**/*pb2.pyi" = [
+    "N802",
+    "ARG002",
+    "N803",
+    "PLR0913",
+    "E712",
+    "E501",
+    "ANN",
+    "FBT",
+    "N815",
+    "E402",
+]
+
+[lint.pylint]
+max-args = 13
+
+[format]
+quote-style = "double"
+indent-style = "space"

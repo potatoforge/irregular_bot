@@ -17,11 +17,9 @@ from services.tg_bot.src.infrastructure.telegram.handlers.main_handler import (
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
 
-# Bot token can be obtained via https://t.me/BotFather
+
 TOKEN = getenv("TG_BOT_KEY", "not-installed")
 ADMIN_ID = int(getenv("ADMIN_ID", "0"))
-
-# All handlers should be attached to the Router (or Dispatcher)
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
@@ -31,7 +29,7 @@ user_repository = container.user_repository
 verb_repository = container.verb_repository
 
 
-async def set_commands(bot: Bot):
+async def set_commands(bot: Bot) -> None:
     commands = [BotCommand(command="start", description="Старт")]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
@@ -50,51 +48,6 @@ async def stop_bot() -> None:
     await bot.send_message(user.tg_id, "Bot stopped!")
 
 
-# @dp.message(CommandStart())
-# async def command_start_handler(message: Message) -> None:
-#     """
-#     This handler receives messages with `/start` command
-#     """
-#     # Most event objects have aliases for API methods that can be called in events' context
-#     # For example if you want to answer to incoming message you can use `message.answer(...)` alias
-#     # and the target chat will be passed to :ref:`aiogram.methods.send_message.SendMessage`
-#     # method automatically or call API method directly via
-#     # Bot instance: `bot.send_message(chat_id=message.chat.id, ...)`
-
-#     user = await user_repository.get_user_by_tg_id(message.from_user.id)
-#     if user is None:
-#         await user_repository.create_user(
-#             User(
-#                 id=uuid4(),
-#                 tg_id=message.from_user.id,
-#                 username=message.from_user.username,
-#                 first_name=message.from_user.first_name,
-#                 last_name=message.from_user.last_name,
-#             )
-#         )
-
-#     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
-
-
-# @dp.message()
-# async def echo_handler(message: Message) -> None:
-
-#     verb = await verb_repository.get_random_irregular_verb()
-
-#     try:
-#         # Send a copy of the received message
-#         await message.reply(
-#             f"Random irregular verb:\n"
-#             f"Base form: {html.bold(verb.base_form)}\n"
-#             f"Past simple: {html.bold(verb.past_simple)}\n"
-#             f"Past participle: {html.bold(verb.past_participle)}\n"
-#             f"Translation: {html.bold(verb.translation)}"
-#         )
-#     except TypeError:
-#         # But not all the types is supported to be copied so need to handle it
-#         await message.answer("Nice try!")
-
-
 async def main() -> None:
     await set_commands(bot)
 
@@ -110,8 +63,8 @@ async def main() -> None:
 
 
 logger.info(
-    "Started with settings: %s",
-    settings.model_dump_json(indent=4, exclude={"postgresql": {"password"}}),
+    "Started with settings",
+    extra={"settings": settings.model_dump(exclude={"postgresql": {"password"}})},
 )
 
 

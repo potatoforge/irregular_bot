@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from services.shared.database.pg_connector import PostgresqlConnector
-from services.tg_bot.src.config.settings import Settings
 from services.tg_bot.src.infrastructure.repositories.game_repository import (
     IrregularGameRepository,
 )
@@ -12,6 +11,10 @@ from services.tg_bot.src.infrastructure.repositories.user_repository import (
 from services.tg_bot.src.infrastructure.repositories.verb_repository import (
     VerbRepository,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.tg_bot.src.config.settings import Settings
 
 
 @dataclass

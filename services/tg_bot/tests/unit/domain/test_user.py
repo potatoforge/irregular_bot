@@ -20,4 +20,4 @@ class TestUser:
         assert user.username == "meme"
         assert user.first_name == "oleg"
         assert user.last_name == "ivanov"
-        assert type(user.id) == uuid.UUID
+        assert isinstance(user.id, uuid)

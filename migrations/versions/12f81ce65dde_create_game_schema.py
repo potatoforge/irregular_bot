@@ -6,9 +6,13 @@ Create Date: 2026-05-26 10:37:34.777737
 
 """
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from alembic import op
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 # revision identifiers, used by Alembic.
 revision: str = "12f81ce65dde"

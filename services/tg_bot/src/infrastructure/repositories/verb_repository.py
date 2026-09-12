@@ -15,8 +15,7 @@ class VerbRepository(BaseRepository):
             result = await session.execute(stmt)
             verb_db = result.scalar_one()
 
-            logger.debug(f"Queried random irregular verb, found: {verb_db is not None}")
-            logger.debug(f"Random irregular verb query result: {verb_db}")
+            logger.debug("Queried random irregular verb found", extra={"verb": verb_db})
 
             return IrregularVerb(
                 id=verb_db.id,
@@ -32,8 +31,10 @@ class VerbRepository(BaseRepository):
             result = await session.execute(stmt)
             verb_db = result.scalar_one()
 
-            logger.debug(f"Queried irregular verb by id={verb_id}, found: {verb_db is not None}")
-            logger.debug(f"Irregular verb by id={verb_id} query result: {verb_db}")
+            logger.debug(
+                "Queried irregular verb by id",
+                extra={"verb_id": verb_id, "verb": verb_db},
+            )
 
             return IrregularVerb(
                 id=verb_db.id,

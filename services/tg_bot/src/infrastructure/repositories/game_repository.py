@@ -20,8 +20,11 @@ class IrregularGameRepository(BaseRepository):
             result = await session.execute(stmt)
             score_db = result.scalar_one_or_none()
 
-            logger.debug(f"Queried game score for user_id={user_id}, found: {score_db is not None}")
-            logger.debug(f"Game score query result: {score_db}")
+            logger.debug(
+                "Queried game score for user",
+                extra={"user_id": user_id, "found": score_db},
+            )
+            logger.debug("Game score query", extra={"result": score_db})
 
             if score_db is None:
                 score_db = IrregularVerbGameScoreDB(
@@ -44,9 +47,10 @@ class IrregularGameRepository(BaseRepository):
             score_db = result.scalar_one()
 
             logger.debug(
-                f"Queried game score for incrementing score for user_id={user_id}, found: {score_db is not None}"
+                "Queried game score for incrementing score for user_id",
+                extra={"user_id": user_id, "found": score_db},
             )
-            logger.debug(f"Game score for incrementing query result: {score_db}")
+            logger.debug("Game score for incrementing", extra={"result": score_db})
 
             score_db.score += 1
             await session.flush()

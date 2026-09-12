@@ -71,7 +71,7 @@ class PostgresqlConnector:
             )
         return self._sessionmaker
 
-    async def connect(self):
+    async def connect(self) -> None:
         if self._engine is None:
             self._engine = self.engine
             logger.info("PostgreSQL AsyncEngine connected")
@@ -79,7 +79,7 @@ class PostgresqlConnector:
             self._sessionmaker = self.sessionmaker
             logger.info("PostgreSQL async_sessionmaker created")
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         if self._engine is not None:
             await self._engine.dispose()
             self._engine = None
@@ -87,9 +87,7 @@ class PostgresqlConnector:
             logger.info("PostgreSQL AsyncEngine disconnected")
 
     @asynccontextmanager
-    async def session(
-        self, *, commit_on_exit: bool = True
-    ) -> AsyncIterator[AsyncSession]:
+    async def session(self, *, commit_on_exit: bool = True) -> AsyncIterator[AsyncSession]:
         if self._sessionmaker is None:
             self._sessionmaker = self.sessionmaker
 

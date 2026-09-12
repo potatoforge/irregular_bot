@@ -15,8 +15,11 @@ class UserRepository(BaseRepository):
             result = await session.execute(stmt)
             user_db = result.scalar_one_or_none()
 
-            logger.debug(f"Queried user with tg_id={tg_id}, found: {user_db is not None}")
-            logger.debug(f"User query result: {user_db}")
+            logger.debug(
+                "Queried user with tg_id, found: {user_db is not None}",
+                extra={"tg_id": tg_id, "found": user_db},
+            )
+            logger.debug("User query result", extra={"user_id": user_db})
 
             if user_db is None:
                 return None
@@ -40,7 +43,7 @@ class UserRepository(BaseRepository):
             )
             session.add(user_db)
             await session.flush()
-            logger.info(f"User with tg_id={user.tg_id} created")
+            logger.info("User with created", extra={"tg_id": user.tg_id})
             return User(
                 id=user_db.id,
                 tg_id=user_db.tg_id,
