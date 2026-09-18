@@ -118,6 +118,7 @@ ignore = [
     "S101",    # Use of asserts
     "A005",    # Module `...` shadows a Python standard-library module
     "S105",    # S105 Possible hardcoded password assigned to: "..."
+    "TC001",   # typing-only-module-import [flake8-type-checking]
     "TC003",   # typing-only-standard-library-import [flake8-type-checking]
 ]
 

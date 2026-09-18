@@ -1,12 +1,16 @@
+import logging
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from typing import TYPE_CHECKING
+from services.shared.database.pg_connector import (
+    PostgresqlConnector,
+    IsolationLevelsEnum,
+)
 
-if TYPE_CHECKING:
-    from services.shared.database.pg_connector import PostgresqlConnector
+logger = logging.getLogger(__name__)
 
 
 class BaseRepository:
@@ -14,6 +18,26 @@ class BaseRepository:
         self.connector = connector
 
     @asynccontextmanager
-    async def _session(self, *, commit_on_exit: bool = True) -> AsyncGenerator[AsyncSession]:
-        async with self.connector.session(commit_on_exit=commit_on_exit) as session:
-            yield session
+    async def _session(
+        self,
+        isolation_level: IsolationLevelsEnum = IsolationLevelsEnum.READ_COMMITTED,
+    ) -> AsyncGenerator[AsyncSession]:
+        engine: async_sessionmaker[AsyncSession] = self.connector.get_engine()
+        async with engine() as session:
+            try:
+                await session.connection(
+                    execution_options={"isolation_level": isolation_level.value}
+                )
+                yield session
+                await session.commit()
+                logger.debug(
+                    "DB transaction committed",
+                    extra={"repository": self.__class__.__name__},
+                )
+            except Exception:
+                await session.rollback()
+                logger.debug(
+                    "DB transaction rollback",
+                    extra={"repository": self.__class__.__name__},
+                )
+                raise

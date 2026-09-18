@@ -16,7 +16,7 @@ class UserRepository(BaseRepository):
             user_db = result.scalar_one_or_none()
 
             logger.debug(
-                "Queried user with tg_id, found: {user_db is not None}",
+                "Queried user with tg_id",
                 extra={"tg_id": tg_id, "found": user_db},
             )
             logger.debug("User query result", extra={"user_id": user_db})

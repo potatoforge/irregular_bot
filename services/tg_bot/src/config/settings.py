@@ -85,7 +85,7 @@ class JsonFormatter(logging.Formatter):
                 except TypeError, ValueError:
                     log_obj[k] = str(v)
 
-        return json.dumps(log_obj, indent=4)
+        return json.dumps(log_obj, indent=4, ensure_ascii=False)
 
 
 class PostgresSettings(BaseModel):
