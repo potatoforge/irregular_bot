@@ -9,6 +9,7 @@ def main_kr() -> ReplyKeyboardMarkup:
         [
             KeyboardButton(text="Show my score"),
         ],
+        [KeyboardButton(text="Get new phrase")],
     ]
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
 
