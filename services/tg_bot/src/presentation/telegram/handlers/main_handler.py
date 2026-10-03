@@ -7,14 +7,12 @@ from aiogram.types import Message
 from services.tg_bot.src.config.settings import settings
 from services.tg_bot.src.container import Container
 from services.tg_bot.src.domain.user import User
+from services.tg_bot.src.domain.irregular_game import IrregularVerbGameScore
 from services.tg_bot.src.presentation.telegram.keyboards.main_keyboard import (
     main_kr,
 )
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from services.tg_bot.src.domain.irregular_game import IrregularVerbGameScore
-    from uuid import UUID
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 

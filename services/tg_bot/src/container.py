@@ -1,25 +1,24 @@
-from dataclasses import dataclass
 from functools import cached_property
 
 from services.shared.database.pg_connector import PostgresqlConnector
-from services.tg_bot.src.infrastructure.repositories.game_repository import (
-    IrregularGameRepository,
-)
-from services.tg_bot.src.infrastructure.repositories.user_repository import (
-    UserRepository,
-)
-from services.tg_bot.src.infrastructure.repositories.verb_repository import (
-    VerbRepository,
-)
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from services.tg_bot.src.config.settings import Settings
+from services.tg_bot.src.infrastructure.repositories.game_repository import IrregularGameRepository
+from services.tg_bot.src.infrastructure.repositories.user_repository import UserRepository
+from services.tg_bot.src.infrastructure.repositories.verb_repository import VerbRepository
+from services.tg_bot.src.infrastructure.repositories.phrase_repository import PhraseRepository
+from services.tg_bot.src.application.phrases.idioms_service import IdiomsService
+from services.tg_bot.src.config.settings import Settings
 
 
-@dataclass
 class Container:
-    settings: Settings
+    instance: Container | None = None
+
+    def __new__(cls, *args, **kwargs) -> Container:  # noqa: ANN002, ANN003, ARG004
+        if cls.instance is None:
+            cls.instance = super().__new__(cls)
+        return cls.instance
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
 
     @classmethod
     def build(cls, settings: Settings) -> Container:
@@ -29,6 +28,8 @@ class Container:
         _ = container.user_repository
         _ = container.verb_repository
         _ = container.irregular_game_repository
+        _ = container.phrase_repository
+        _ = container.idiom_service
         return container
 
     @cached_property
@@ -46,3 +47,11 @@ class Container:
     @cached_property
     def irregular_game_repository(self) -> IrregularGameRepository:
         return IrregularGameRepository(connector=self.pg_connector)
+
+    @cached_property
+    def phrase_repository(self) -> PhraseRepository:
+        return PhraseRepository(connector=self.pg_connector)
+
+    @cached_property
+    def idiom_service(self) -> IdiomsService:
+        return IdiomsService(self.phrase_repository)

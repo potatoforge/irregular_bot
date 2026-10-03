@@ -92,7 +92,8 @@ async def cmd_get_random_verb_handler(
     await message.answer(
         f"Random irregular verb:\n"
         f"Translation: {html.bold(random_verb.translation)}\n"
-        f"Base form: {html.bold(html.spoiler(random_verb.base_form))}\n",
+        f"Base form: {html.bold(html.spoiler(random_verb.base_form))}\n\n"
+        "Type your answer like that: go, went, gone",
         reply_markup=i_dont_know_kr(),
     )
 

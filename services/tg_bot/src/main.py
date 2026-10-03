@@ -62,6 +62,7 @@ async def lifespan(dispatcher: Dispatcher, bot_instance: Bot) -> AsyncGenerator[
     dispatcher["user_repository"] = container.user_repository
     dispatcher["verb_repository"] = container.verb_repository
     dispatcher["irregular_game_repository"] = container.irregular_game_repository
+    dispatcher["idiom_service"] = container.idiom_service
 
     dispatcher.include_router(main_router)
     dispatcher.include_router(verb_router)
