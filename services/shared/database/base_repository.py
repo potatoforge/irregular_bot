@@ -1,9 +1,16 @@
+import logging
+
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from services.shared.database.pg_connector import PostgresqlConnector
+from services.shared.database.pg_connector import (
+    PostgresqlConnector,
+    IsolationLevelsEnum,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class BaseRepository:
@@ -12,7 +19,25 @@ class BaseRepository:
 
     @asynccontextmanager
     async def _session(
-        self, *, commit_on_exit: bool = True
-    ) -> AsyncIterator[AsyncSession]:
-        async with self.connector.session(commit_on_exit=commit_on_exit) as session:
-            yield session
+        self,
+        isolation_level: IsolationLevelsEnum = IsolationLevelsEnum.READ_COMMITTED,
+    ) -> AsyncGenerator[AsyncSession]:
+        engine: async_sessionmaker[AsyncSession] = self.connector.get_engine()
+        async with engine() as session:
+            try:
+                await session.connection(
+                    execution_options={"isolation_level": isolation_level.value}
+                )
+                yield session
+                await session.commit()
+                logger.debug(
+                    "DB transaction committed",
+                    extra={"repository": self.__class__.__name__},
+                )
+            except Exception:
+                await session.rollback()
+                logger.debug(
+                    "DB transaction rollback",
+                    extra={"repository": self.__class__.__name__},
+                )
+                raise

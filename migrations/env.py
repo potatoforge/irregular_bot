@@ -1,17 +1,19 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from migrations.settings import settings
 from services.shared.database.base_model import Base
-from services.tg_bot.src.infrastructure.db.sqlalchemy import user
-from services.tg_bot.src.infrastructure.db.sqlalchemy import verbs
-from services.tg_bot.src.infrastructure.db.sqlalchemy import game
-
-from alembic import context
+from services.tg_bot.src.infrastructure.db.sqlalchemy.game import (
+    IrregularVerbGameScoreDB,
+)
+from services.tg_bot.src.infrastructure.db.sqlalchemy.phrase import IdiomPhraseDB
+from services.tg_bot.src.infrastructure.db.sqlalchemy.user import UserDB
+from services.tg_bot.src.infrastructure.db.sqlalchemy.verbs import IrregularVerbDB
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -22,23 +24,17 @@ config.set_main_option("sqlalchemy.url", value=settings.postgresql.dsn)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
-
-def include_object(object, name, type_, reflected, compare_to) -> bool:
-    if hasattr(object, "schema"):
-        if object.schema not in {"tg", "eng", "game"}:
-            return False
-    return True
+def include_object(
+    object,
+    name,
+    type_,
+    reflected,
+    compare_to,  # noqa: ARG001, ANN001
+) -> bool:
+    return hasattr(object, "schema") and object.schema in {"tg", "eng", "game"}
 
 
 def run_migrations_offline() -> None:

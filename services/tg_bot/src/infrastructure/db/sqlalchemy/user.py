@@ -1,32 +1,32 @@
-import uuid
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.types import BigInteger
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
+from uuid import UUID, uuid4
+
 from services.shared.database.base_model import Base
+from sqlalchemy import ForeignKey
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import BigInteger
 
 
 class UserDB(Base):
     __tablename__ = "user"
-    __table_args__ = {"schema": "tg"}
+    __table_args__ = ({"schema": "tg"},)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
-    username: Mapped[str | None] = mapped_column()
-    first_name: Mapped[str | None] = mapped_column()
-    last_name: Mapped[str | None] = mapped_column()
+    username: Mapped[str | None] = mapped_column(comment="username")
+    first_name: Mapped[str | None] = mapped_column(comment="first name")
+    last_name: Mapped[str | None] = mapped_column(comment="last name")
 
-    admin: Mapped["AdminDB"] = relationship(back_populates="user")
+    admin: Mapped[AdminDB] = relationship(back_populates="user")
 
     repr_cols_num = 5
 
 
 class AdminDB(Base):
     __tablename__ = "admin"
-    __table_args__ = {"schema": "tg"}
+    __table_args__ = ({"schema": "tg"},)
 
-    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tg.user.id"), primary_key=True)
+    id: Mapped[UUID] = mapped_column(
+        ForeignKey("tg.user.id"), primary_key=True, comment="identifier"
+    )
     user: Mapped[UserDB] = relationship(back_populates="admin")

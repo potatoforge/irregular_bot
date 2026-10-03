@@ -1,6 +1,7 @@
+import asyncio
 import logging
-from contextlib import asynccontextmanager
-from typing import AsyncIterator, Protocol
+from enum import StrEnum
+from typing import Protocol
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -10,6 +11,13 @@ from sqlalchemy.ext.asyncio import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class IsolationLevelsEnum(StrEnum):
+    READ_COMMITTED = "READ COMMITTED"
+    REPEATABLE_READ = "REPEATABLE READ"
+    SERIALIZABLE = "SERIALIZABLE"
+    READ_UNCOMMITTED = "READ UNCOMMITTED"
 
 
 class PostgresSettings(Protocol):
@@ -39,64 +47,56 @@ class PostgresSettings(Protocol):
 
 class PostgresqlConnector:
     def __init__(self, config: PostgresSettings):
-        self._config = config
+        self._config: PostgresSettings = config
         self._engine: AsyncEngine | None = None
         self._sessionmaker: async_sessionmaker[AsyncSession] | None = None
+        self._lock: asyncio.Lock = asyncio.Lock()
 
-    @property
-    def engine(self) -> AsyncEngine:
-        if self._engine is None:
-            logger.info("Creating new AsyncEngine for PostgreSQL")
-            self._engine = create_async_engine(
-                url=self._config.dsn,
-                echo=self._config.db_echo,
-                echo_pool=self._config.db_echo,
-                pool_size=self._config.db_pool_size,
-                max_overflow=self._config.db_max_overflow,
-                pool_timeout=self._config.db_pool_timeout,
-                pool_recycle=self._config.db_pool_recycle,
-                pool_pre_ping=self._config.db_pool_pre_ping,
-                future=True,
-            )
-        return self._engine
+    async def connect(self) -> None:
 
-    @property
-    def sessionmaker(self) -> async_sessionmaker[AsyncSession]:
-        if self._sessionmaker is None:
-            logger.info("Creating new async_sessionmaker for PostgreSQL")
-            self._sessionmaker = async_sessionmaker(
-                bind=self.engine,
-                expire_on_commit=False,
-            )
-        return self._sessionmaker
-
-    async def connect(self):
-        if self._engine is None:
-            self._engine = self.engine
-            logger.info("PostgreSQL AsyncEngine connected")
-        if self._sessionmaker is None:
-            self._sessionmaker = self.sessionmaker
-            logger.info("PostgreSQL async_sessionmaker created")
-
-    async def disconnect(self):
         if self._engine is not None:
-            await self._engine.dispose()
-            self._engine = None
-            self._sessionmaker = None
-            logger.info("PostgreSQL AsyncEngine disconnected")
+            return
 
-    @asynccontextmanager
-    async def session(
-        self, *, commit_on_exit: bool = True
-    ) -> AsyncIterator[AsyncSession]:
-        if self._sessionmaker is None:
-            self._sessionmaker = self.sessionmaker
+        async with self._lock:
+            if self._engine is not None:
+                return
 
-        async with self._sessionmaker() as session:
+            logger.info("Creating new AsyncEngine for PostgreSQL")
             try:
-                yield session
-                if commit_on_exit:
-                    await session.commit()
+                self._engine = create_async_engine(
+                    url=self._config.dsn,
+                    echo=self._config.db_echo,
+                    echo_pool=self._config.db_echo,
+                    pool_size=self._config.db_pool_size,
+                    max_overflow=self._config.db_max_overflow,
+                    pool_timeout=self._config.db_pool_timeout,
+                    pool_recycle=self._config.db_pool_recycle,
+                    pool_pre_ping=self._config.db_pool_pre_ping,
+                )
+
+                logger.info("Creating new async_sessionmaker for PostgreSQL")
+                self._sessionmaker = async_sessionmaker(
+                    bind=self._engine,
+                    expire_on_commit=False,
+                )
+
             except Exception:
-                await session.rollback()
+                logger.exception(
+                    "Failed to connect Postgresql", extra={"dsn": self._config.dsn_safe}
+                )
                 raise
+
+    async def disconnect(self) -> None:
+        async with self._lock:
+            if self._engine is not None:
+                logger.info("Disposing PostgresSQL connection pool...")
+                await self._engine.dispose()
+                self._engine = None
+                self._sessionmaker = None
+                logger.info("PostgreSQL AsyncEngine disconnected")
+
+    def get_engine(self) -> async_sessionmaker[AsyncSession]:
+        if self._sessionmaker is None:
+            raise RuntimeError("PostgresqlConnector is not connected.")
+
+        return self._sessionmaker

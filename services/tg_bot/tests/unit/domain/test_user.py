@@ -1,5 +1,7 @@
 import uuid
+
 import pytest
+
 from services.tg_bot.src.domain.user import User
 
 
@@ -18,4 +20,4 @@ class TestUser:
         assert user.username == "meme"
         assert user.first_name == "oleg"
         assert user.last_name == "ivanov"
-        assert type(user.id) == uuid.UUID
+        assert isinstance(user.id, uuid.UUID)
