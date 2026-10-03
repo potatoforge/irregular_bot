@@ -15,7 +15,7 @@ from services.tg_bot.src.infrastructure.repositories.user_repository import (
 from services.tg_bot.src.infrastructure.repositories.verb_repository import (
     VerbRepository,
 )
-from services.tg_bot.src.infrastructure.telegram.keyboards.main_keyboard import (
+from services.tg_bot.src.presentation.telegram.keyboards.main_keyboard import (
     i_dont_know_kr,
     main_kr,
 )
@@ -23,8 +23,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from services.tg_bot.src.domain.verb import IrregularVerb
-
-logger = logging.getLogger(__name__)
 
 
 logger = logging.getLogger(__name__)

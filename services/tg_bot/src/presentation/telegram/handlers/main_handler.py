@@ -7,7 +7,7 @@ from aiogram.types import Message
 from services.tg_bot.src.config.settings import settings
 from services.tg_bot.src.container import Container
 from services.tg_bot.src.domain.user import User
-from services.tg_bot.src.infrastructure.telegram.keyboards.main_keyboard import (
+from services.tg_bot.src.presentation.telegram.keyboards.main_keyboard import (
     main_kr,
 )
 from typing import TYPE_CHECKING

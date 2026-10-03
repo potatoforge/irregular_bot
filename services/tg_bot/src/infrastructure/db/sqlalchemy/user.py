@@ -13,9 +13,9 @@ class UserDB(Base):
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
-    username: Mapped[str | None] = mapped_column()
-    first_name: Mapped[str | None] = mapped_column()
-    last_name: Mapped[str | None] = mapped_column()
+    username: Mapped[str | None] = mapped_column(comment="username")
+    first_name: Mapped[str | None] = mapped_column(comment="first name")
+    last_name: Mapped[str | None] = mapped_column(comment="last name")
 
     admin: Mapped[AdminDB] = relationship(back_populates="user")
 
@@ -26,5 +26,7 @@ class AdminDB(Base):
     __tablename__ = "admin"
     __table_args__ = ({"schema": "tg"},)
 
-    id: Mapped[UUID] = mapped_column(ForeignKey("tg.user.id"), primary_key=True)
+    id: Mapped[UUID] = mapped_column(
+        ForeignKey("tg.user.id"), primary_key=True, comment="identifier"
+    )
     user: Mapped[UserDB] = relationship(back_populates="admin")

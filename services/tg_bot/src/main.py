@@ -12,15 +12,10 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from contextlib import asynccontextmanager
 from services.tg_bot.src.config.settings import LOGGING, settings
 from services.tg_bot.src.container import Container
-from services.tg_bot.src.infrastructure.telegram.handlers.main_handler import (
-    main_router,
-)
-from services.tg_bot.src.infrastructure.telegram.handlers.verb_game_handler import (
-    verb_router,
-)
-from services.tg_bot.src.infrastructure.repositories.user_repository import (
-    UserRepository,
-)
+from services.tg_bot.src.presentation.telegram.handlers.main_handler import main_router
+from services.tg_bot.src.presentation.telegram.handlers.verb_game_handler import verb_router
+from services.tg_bot.src.presentation.telegram.handlers.phrase_handler import phrase_router
+from services.tg_bot.src.infrastructure.repositories.user_repository import UserRepository
 
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
@@ -70,6 +65,7 @@ async def lifespan(dispatcher: Dispatcher, bot_instance: Bot) -> AsyncGenerator[
 
     dispatcher.include_router(main_router)
     dispatcher.include_router(verb_router)
+    dispatcher.include_router(phrase_router)
 
     await send_start_status(container.user_repository)
 

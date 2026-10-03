@@ -8,6 +8,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from migrations.settings import settings
 from services.shared.database.base_model import Base
+from services.tg_bot.src.infrastructure.db.sqlalchemy.game import (
+    IrregularVerbGameScoreDB,
+)
+from services.tg_bot.src.infrastructure.db.sqlalchemy.phrase import IdiomPhraseDB
+from services.tg_bot.src.infrastructure.db.sqlalchemy.user import UserDB
+from services.tg_bot.src.infrastructure.db.sqlalchemy.verbs import IrregularVerbDB
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
