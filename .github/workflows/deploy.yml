@@ -25,5 +25,4 @@ jobs:
                   script: |
                       cd /root/dev/irregular_bot
                       git pull origin main
-                      docker compose down
                       docker compose up -d --build
