@@ -47,7 +47,7 @@ async def check_verb(verb_repository: VerbRepository, verb_id: int, user_input: 
     if verb is None:
         return False
 
-    user_verbs = [v.strip().lower() for v in user_input.split(" ")]
+    user_verbs = [v.strip().lower() for v in user_input.replace(",", "").split(" ")]
     if len(user_verbs) != 3:
         logger.info(
             "User input does not contain exactly 3 verbs.", extra={"user_input": user_input}
@@ -93,7 +93,7 @@ async def cmd_get_random_verb_handler(
         f"Random irregular verb:\n"
         f"Translation: {html.bold(random_verb.translation)}\n"
         f"Base form: {html.bold(html.spoiler(random_verb.base_form))}\n\n"
-        "Type your answer in this format:\n go, went, gone",
+        "Type your answer in this format:\n go went gone",
         reply_markup=i_dont_know_kr(),
     )
 
